@@ -9,7 +9,7 @@ const DEFAULT_CORS_HEADERS = {
   "User-Agent": UA,
 };
 
-async function fetchPage(url, retries = 3) {
+async function fetchPage(url, retries = 2) {
   let lastErr = null;
   for (let i = 0; i < retries; i++) {
     try {
@@ -19,7 +19,8 @@ async function fetchPage(url, retries = 3) {
           Accept: "text/html,*/*;q=0.8",
           Referer: BASE_URL,
         },
-        signal: AbortSignal.timeout(30000),
+        // Changed to 8 seconds. Vercel fails after 10s. We must catch it before Vercel does!
+        signal: AbortSignal.timeout(8000),
       });
       if (res.ok || (res.status >= 400 && res.status < 500 && res.status !== 429))
         return res;
@@ -27,9 +28,9 @@ async function fetchPage(url, retries = 3) {
     } catch (e) {
       lastErr = e;
     }
-    if (i < retries - 1) await new Promise((r) => setTimeout(r, 2 ** i * 500));
+    if (i < retries - 1) await new Promise((r) => setTimeout(r, 1000));
   }
-  throw lastErr;
+  throw lastErr || new Error("Failed to fetch page");
 }
 
 async function fetchText(url, referer) {
@@ -39,13 +40,13 @@ async function fetchText(url, referer) {
       Referer: referer || BASE_URL,
       Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
     },
-    signal: AbortSignal.timeout(20000),
+    signal: AbortSignal.timeout(8000), // Changed to 8 seconds
   });
   return res.text();
 }
 
 function extractM3u8FromText(text) {
-  const matches = text.match(/https?:\/\/[^\s"'<>]+\.m3u8[^\s"'<>]*/gi) || [];
+  const matches = text.match(/https?:\/\/[^\s"'<>]+\.m3u8[^\s"'<>]*/gi) ||[];
   const normalized = matches.map((m) => m.replace(/\\\//g, "/"));
   return Array.from(new Set(normalized));
 }
@@ -54,7 +55,7 @@ export async function getHome() {
   const res = await fetchPage(BASE_URL);
   const html = await res.text();
   const $ = cheerio.load(html);
-  const featured = [];
+  const featured =[];
 
   $("figure.wp-caption").each((_, fig) => {
     const link = $(fig).find("a").attr("href");
@@ -109,7 +110,7 @@ export async function getCategory(name) {
   const res = await fetchPage(`${BASE_URL}/category/${name}/`);
   const html = await res.text();
   const $ = cheerio.load(html);
-  const anime = [];
+  const anime =[];
 
   $("article").each((_, a) => {
     const titleEl = $(a).find(".entry-title a, h2 a, h3 a").first();
@@ -130,7 +131,7 @@ export async function search(title) {
   const res = await fetchPage(`${BASE_URL}/?s=${encodeURIComponent(title)}`);
   const html = await res.text();
   const $ = cheerio.load(html);
-  const animeList = [];
+  const animeList =[];
 
   $("article, .post, .type-post").each((_, el) => {
     const titleEl = $(el).find(".entry-title a, .post-title a, h2 a").first();
@@ -168,7 +169,7 @@ export async function getAnime(slug) {
     $("article .entry-content p").first().text().trim() ||
     $('meta[property="og:description"]').attr("content");
 
-  const servers = { filemoon: [], servabyss: [], vidgroud: [] };
+  const servers = { filemoon: [], servabyss: [], vidgroud:[] };
 
   $("script").each((_, s) => {
     const sc = $(s).html() || "";
@@ -207,7 +208,7 @@ export async function getAnime(slug) {
       if (!num) return;
 
       if (!episodeMap.has(num))
-        episodeMap.set(num, { number: num, title: `Episode ${num}`, servers: [] });
+        episodeMap.set(num, { number: num, title: `Episode ${num}`, servers:[] });
 
       episodeMap.get(num).servers.push({
         name: serverName,
@@ -236,13 +237,13 @@ export async function getAnime(slug) {
 
 export async function extractEpisodeHls(sourceUrl) {
   if (!sourceUrl) {
-    return { sourceUrl, hls: [], inspected: [], note: "Missing source URL" };
+    return { sourceUrl, hls: [], inspected:[], note: "Missing source URL" };
   }
 
   if (/servabyss/i.test(sourceUrl)) {
     return {
       sourceUrl,
-      hls: [],
+      hls:[],
       inspected: [sourceUrl],
       skipped: true,
       note: "Servabyss extraction is intentionally skipped",
