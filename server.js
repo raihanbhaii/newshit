@@ -24,7 +24,7 @@ app.get("/", (c) =>
       episodeEmbed: "GET /episode?url=<embed_url>",
       episodeHls:   "GET /episode/hls?url=<embed_url>&server=filemoon",
     },
-    categories: [
+    categories:[
       "action","action-adventure","adventure","comedy","drama",
       "fantasy","horror","mystery","love-romantic","school",
       "slice-of-life","hindi-anime-movies","cartoon-shows",
@@ -36,4 +36,5 @@ app.get("/", (c) =>
 
 app.route("/", hindidubbedRoutes);
 
-export default app.fetch;
+// Export the Hono app instance so the Vercel handler can use it
+export default app;
