@@ -1,0 +1,16 @@
+{
+  "name": "animehindidubbed-api",
+  "version": "1.0.0",
+  "description": "Anime scraper API for animehindidubbed.in — TatakaiAPI style",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "dev": "vercel dev"
+  },
+  "keywords": ["anime", "hindi-dubbed", "scraper", "api", "hono"],
+  "license": "MIT",
+  "dependencies": {
+    "cheerio": "^1.0.0",
+    "hono": "^4.4.1"
+  }
+}
