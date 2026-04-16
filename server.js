@@ -1,15 +1,11 @@
 import { Hono } from "hono";
-import { Cache } from "./src/cache.js";
+import { cors } from "hono/cors";
 import { hindidubbedRoutes } from "./routes/hindidubbed.js";
 
 const app = new Hono();
 
-app.use("*", async (c, next) => {
-  await next();
-  c.res.headers.set("Access-Control-Allow-Origin", "*");
-  c.res.headers.set("Access-Control-Allow-Methods", "GET, OPTIONS");
-  c.res.headers.set("Access-Control-Allow-Headers", "Content-Type");
-});
+// Use Hono's official CORS so it doesn't crash Vercel's response stream
+app.use("*", cors());
 
 app.get("/", (c) =>
   c.json({
@@ -36,5 +32,4 @@ app.get("/", (c) =>
 
 app.route("/", hindidubbedRoutes);
 
-// Export the Hono app instance so the Vercel handler can use it
 export default app;
